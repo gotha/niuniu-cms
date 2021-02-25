@@ -1,0 +1,13 @@
+version: '3.3'
+
+services:
+
+  db:
+    image: "postgres" # use latest official postgres version
+    environment:
+      POSTGRES_USER: gocms
+      POSTGRES_PASSWORD: 4rfvbgt5
+      POSTGRES_DB: gocms
+    ports:
+      - 5432:5432
+
