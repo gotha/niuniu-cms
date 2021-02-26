@@ -1,0 +1,16 @@
+
+type Query {
+  tags: [Tag!]!
+  documents: [Document!]!
+}
+
+type Mutation {
+  createTag(input: NewTag!): Tag!
+  updateTag(id: String!, input: UpdateTag!): Tag!
+  deleteTag(id: String!): Boolean!
+
+  createDocument(input: NewDocument!): Document!
+  updateDocument(id: String!, input: UpdateDocument!): Document!
+  deleteDocument(id: String!): Boolean!
+}
+

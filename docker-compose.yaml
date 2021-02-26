@@ -3,7 +3,7 @@ version: '3.3'
 services:
 
   db:
-    image: "postgres" # use latest official postgres version
+    image: "postgres"
     environment:
       POSTGRES_USER: gocms
       POSTGRES_PASSWORD: 4rfvbgt5
@@ -11,3 +11,12 @@ services:
     ports:
       - 5432:5432
 
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@example.com
+      PGADMIN_DEFAULT_PASSWORD: 4rfvbgt5
+    ports:
+      - 5050:80

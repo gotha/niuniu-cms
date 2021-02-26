@@ -1,0 +1,13 @@
+type Tag {
+  id: String!
+  title: String!
+}
+
+input NewTag {
+  title: String!
+}
+
+input UpdateTag {
+  title: String!
+}
+

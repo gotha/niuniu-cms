@@ -1,75 +1,107 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 
-	"github.com/aws/aws-lambda-go/events"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/akrylysov/algnhsa"
+	"github.com/gotha/niuniu-cms/data"
+	"github.com/gotha/niuniu-cms/graph"
+	"github.com/gotha/niuniu-cms/graph/generated"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// Response is of type APIGatewayProxyResponse since we're leveraging the
-// AWS Lambda Proxy Request functionality (default behavior)
-//
-// https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
-type Response events.APIGatewayProxyResponse
+const defaultPort = "8080"
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (Response, error) {
+func initDB() (*gorm.DB, error) {
 
-	//dsn := "cms:4rfvbgt5@tcp(127.0.0.1:3306)/gocms?charset=utf8mb4&parseTime=True&loc=Local"
-	//db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	dsn := "host=localhost user=gocms password=4rfvbgt5 dbname=gocms port=5432 sslmode=disable TimeZone=Europe/Sofia"
+	host := os.Getenv("DB_HOST")
+	username := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	name := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+	if port == "" {
+		port = "5432"
+	}
+	sslmode := os.Getenv("DB_SSL_MODE")
+	if sslmode == "" {
+		sslmode = "disable"
+	}
+	timezone := os.Getenv("DB_TIMEZONE")
+	if timezone == "" {
+		timezone = "Europe/Sofia"
+	}
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		host,
+		username,
+		password,
+		name,
+		port,
+		sslmode,
+		timezone,
+	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return Response{}, err
+		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
 
-	q := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
-	db.Exec(q)
+	migrateDB := os.Getenv("MIGRATE_DB")
+	if migrateDB == "true" {
 
-	err = db.AutoMigrate(&Document{})
-	if err != nil {
-		return Response{}, err
+		q := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
+		res := db.Exec(q)
+		if res.Error != nil {
+			return nil, fmt.Errorf("could not create uuid-ossp extension")
+		}
+
+		err = db.AutoMigrate(&data.Document{}, &data.Tag{}, &data.Attachment{})
+		if err != nil {
+			return nil, fmt.Errorf("could not migrate database schema: %w", err)
+		}
 	}
 
-	doc := &Document{
-		Title: "This is test",
-		Body:  "This is my body",
-	}
-
-	res := db.Create(doc)
-	fmt.Printf("%+v\n", res)
-
-	var buf bytes.Buffer
-
-	body, err := json.Marshal(map[string]interface{}{
-		"message": "Go Serverless v1.0! Your function executed successfully!",
-	})
-	if err != nil {
-		return Response{StatusCode: 404}, err
-	}
-	json.HTMLEscape(&buf, body)
-
-	resp := Response{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"Content-Type":           "application/json",
-			"X-MyCompany-Func-Reply": "hello-handler",
-		},
-	}
-
-	return resp, nil
+	return db, nil
 }
 
 func main() {
-	resp, err := Handler(context.TODO())
-	fmt.Printf("%+v\n", resp)
-	fmt.Printf("%+v\n", err)
-	//lambda.Start(Handler)
+
+	db, err := initDB()
+	if err != nil {
+		fmt.Printf("error initializing database: %s", err.Error())
+		os.Exit(1)
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	documentService := data.NewDocumentService(db)
+	tagService := data.NewTagService(db)
+	resolver := graph.NewResolver(
+		tagService,
+		documentService,
+	)
+	config := generated.Config{
+		Resolvers: resolver,
+	}
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srv)
+
+	if os.Getenv("LAMBDA") == "true" {
+		algnhsa.ListenAndServe(http.DefaultServeMux, nil)
+	} else {
+		log.Printf("GraphQL playground started at http://localhost:%s/", port)
+		log.Fatal(http.ListenAndServe(":"+port, nil))
+	}
 }

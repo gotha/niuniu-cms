@@ -1,0 +1,18 @@
+
+type Document {
+  id: String!
+  title: String!
+  body: String!
+  tags: [Tag!]!
+}
+
+input NewDocument {
+  title: String!
+  body: String!
+}
+
+input UpdateDocument {
+  title: String!
+  body:  String!
+}
+
