@@ -9,6 +9,7 @@ type Document {
 input NewDocument {
   title: String!
   body: String!
+  tags: [String!]
 }
 
 input UpdateDocument {

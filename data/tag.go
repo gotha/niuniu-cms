@@ -33,6 +33,16 @@ func (s *TagService) GetAll() ([]Tag, error) {
 	return tags, nil
 }
 
+func (s *TagService) Get(ID string) (*Tag, error) {
+	var tag Tag
+	res := s.db.Where("id = ?", ID).First(&tag)
+	if res.RowsAffected < 1 {
+		return nil, fmt.Errorf("there is no tag with ID %s", ID)
+	}
+
+	return &tag, nil
+}
+
 func (s *TagService) New(title string) (*Tag, error) {
 
 	var existingTag Tag

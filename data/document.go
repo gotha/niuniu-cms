@@ -30,18 +30,19 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 
 func (s *DocumentService) GetAll() ([]Document, error) {
 	var docs []Document
-	res := s.db.Find(&docs)
+	res := s.db.Preload("Tags").Find(&docs)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return docs, nil
 }
 
-func (s *DocumentService) New(title string, body string) (*Document, error) {
+func (s *DocumentService) New(title string, body string, tags []Tag) (*Document, error) {
 	doc := &Document{
 		Title: title,
 		Body:  body,
 	}
+	doc.Tags = append(doc.Tags, tags...)
 
 	res := s.db.Save(doc)
 	if res.Error != nil {
