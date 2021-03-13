@@ -10,77 +10,29 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/akrylysov/algnhsa"
 	"github.com/gotha/niuniu-cms/data"
+	"github.com/gotha/niuniu-cms/db"
 	"github.com/gotha/niuniu-cms/graph"
 	"github.com/gotha/niuniu-cms/graph/generated"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
-
-const defaultPort = "8080"
-
-func initDB() (*gorm.DB, error) {
-
-	host := os.Getenv("DB_HOST")
-	username := os.Getenv("DB_USERNAME")
-	password := os.Getenv("DB_PASSWORD")
-	name := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "5432"
-	}
-	sslmode := os.Getenv("DB_SSL_MODE")
-	if sslmode == "" {
-		sslmode = "disable"
-	}
-	timezone := os.Getenv("DB_TIMEZONE")
-	if timezone == "" {
-		timezone = "Europe/Sofia"
-	}
-
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		host,
-		username,
-		password,
-		name,
-		port,
-		sslmode,
-		timezone,
-	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to database: %w", err)
-	}
-
-	migrateDB := os.Getenv("MIGRATE_DB")
-	if migrateDB == "true" {
-
-		q := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
-		res := db.Exec(q)
-		if res.Error != nil {
-			return nil, fmt.Errorf("could not create uuid-ossp extension")
-		}
-
-		err = db.AutoMigrate(&data.Document{}, &data.Tag{}, &data.Attachment{})
-		if err != nil {
-			return nil, fmt.Errorf("could not migrate database schema: %w", err)
-		}
-	}
-
-	return db, nil
-}
 
 func main() {
 
-	db, err := initDB()
+	config, err := NewConfigFromEnv()
 	if err != nil {
-		fmt.Printf("error initializing database: %s", err.Error())
+		fmt.Printf("error loading config: %s", err.Error())
 		os.Exit(1)
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	dbConfig, err := db.NewConfigFromEnv()
+	if err != nil {
+		fmt.Printf("error creating database config: %s", err.Error())
+		os.Exit(1)
+	}
+
+	db, err := db.InitDB(dbConfig)
+	if err != nil {
+		fmt.Printf("error initializing database: %s", err.Error())
+		os.Exit(1)
 	}
 
 	documentService := data.NewDocumentService(db)
@@ -89,11 +41,11 @@ func main() {
 		tagService,
 		documentService,
 	)
-	config := generated.Config{
+	gqlconfig := generated.Config{
 		Resolvers: resolver,
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlconfig))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
@@ -101,7 +53,7 @@ func main() {
 	if os.Getenv("LAMBDA") == "true" {
 		algnhsa.ListenAndServe(http.DefaultServeMux, nil)
 	} else {
-		log.Printf("GraphQL playground started at http://localhost:%s/", port)
-		log.Fatal(http.ListenAndServe(":"+port, nil))
+		log.Printf("GraphQL playground started at http://localhost:%d/", config.Port)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 	}
 }

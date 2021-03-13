@@ -16,7 +16,7 @@ services:
     depends_on:
       - db
     environment:
-      PGADMIN_DEFAULT_EMAIL: test@example.com
+      PGADMIN_DEFAULT_EMAIL: test
       PGADMIN_DEFAULT_PASSWORD: 4rfvbgt5
     ports:
       - 5050:80
