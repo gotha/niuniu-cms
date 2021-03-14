@@ -50,6 +50,11 @@ type ComplexityRoot struct {
 		Title func(childComplexity int) int
 	}
 
+	Documents struct {
+		Count     func(childComplexity int) int
+		Documents func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateDocument func(childComplexity int, input model.NewDocument) int
 		CreateTag      func(childComplexity int, input model.NewTag) int
@@ -60,8 +65,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Documents func(childComplexity int) int
-		Tags      func(childComplexity int) int
+		GetDocuments      func(childComplexity int, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) int
+		GetDocumentsByTag func(childComplexity int, tagID string, first *int, offset *int, sortBy *string, sortDesc *bool) int
+		Tags              func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -80,7 +86,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Tags(ctx context.Context) ([]*model.Tag, error)
-	Documents(ctx context.Context) ([]*model.Document, error)
+	GetDocuments(ctx context.Context, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) (*model.Documents, error)
+	GetDocumentsByTag(ctx context.Context, tagID string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error)
 }
 
 type executableSchema struct {
@@ -125,6 +132,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Document.Title(childComplexity), true
+
+	case "Documents.count":
+		if e.complexity.Documents.Count == nil {
+			break
+		}
+
+		return e.complexity.Documents.Count(childComplexity), true
+
+	case "Documents.documents":
+		if e.complexity.Documents.Documents == nil {
+			break
+		}
+
+		return e.complexity.Documents.Documents(childComplexity), true
 
 	case "Mutation.createDocument":
 		if e.complexity.Mutation.CreateDocument == nil {
@@ -198,12 +219,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateTag(childComplexity, args["id"].(string), args["input"].(model.UpdateTag)), true
 
-	case "Query.documents":
-		if e.complexity.Query.Documents == nil {
+	case "Query.getDocuments":
+		if e.complexity.Query.GetDocuments == nil {
 			break
 		}
 
-		return e.complexity.Query.Documents(childComplexity), true
+		args, err := ec.field_Query_getDocuments_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDocuments(childComplexity, args["first"].(*int), args["offset"].(*int), args["perPage"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool)), true
+
+	case "Query.getDocumentsByTag":
+		if e.complexity.Query.GetDocumentsByTag == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDocumentsByTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDocumentsByTag(childComplexity, args["tagID"].(string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool)), true
 
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
@@ -298,6 +336,11 @@ type Document {
   tags: [Tag!]!
 }
 
+type Documents {
+  documents: [Document!]!
+  count: Int!
+}
+
 input NewDocument {
   title: String!
   body: String!
@@ -313,7 +356,8 @@ input UpdateDocument {
 	{Name: "graph/schema.graphqls", Input: `
 type Query {
   tags: [Tag!]!
-  documents: [Document!]!
+  getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
+  getDocumentsByTag(tagID: String!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
 }
 
 type Mutation {
@@ -468,6 +512,108 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getDocumentsByTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["tagID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["tagID"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortBy"] = arg3
+	var arg4 *bool
+	if tmp, ok := rawArgs["sortDesc"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortDesc"))
+		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortDesc"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getDocuments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perPage"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortBy"] = arg3
+	var arg4 *bool
+	if tmp, ok := rawArgs["sortDesc"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortDesc"))
+		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortDesc"] = arg4
 	return args, nil
 }
 
@@ -647,6 +793,76 @@ func (ec *executionContext) _Document_tags(ctx context.Context, field graphql.Co
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
 	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Documents_documents(ctx context.Context, field graphql.CollectedField, obj *model.Documents) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Documents",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Documents, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Document)
+	fc.Result = res
+	return ec.marshalNDocument2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐDocumentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Documents_count(ctx context.Context, field graphql.CollectedField, obj *model.Documents) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Documents",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -936,7 +1152,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_documents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getDocuments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -952,23 +1168,66 @@ func (ec *executionContext) _Query_documents(ctx context.Context, field graphql.
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDocuments_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Documents(rctx)
+		return ec.resolvers.Query().GetDocuments(rctx, args["first"].(*int), args["offset"].(*int), args["perPage"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Document)
+	res := resTmp.(*model.Documents)
 	fc.Result = res
-	return ec.marshalNDocument2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐDocumentᚄ(ctx, field.Selections, res)
+	return ec.marshalODocuments2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐDocuments(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getDocumentsByTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDocumentsByTag_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDocumentsByTag(rctx, args["tagID"].(string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Documents)
+	fc.Result = res
+	return ec.marshalODocuments2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐDocuments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2353,6 +2612,38 @@ func (ec *executionContext) _Document(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var documentsImplementors = []string{"Documents"}
+
+func (ec *executionContext) _Documents(ctx context.Context, sel ast.SelectionSet, obj *model.Documents) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, documentsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Documents")
+		case "documents":
+			out.Values[i] = ec._Documents_documents(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "count":
+			out.Values[i] = ec._Documents_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2438,7 +2729,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "documents":
+		case "getDocuments":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2446,10 +2737,18 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_documents(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
+				res = ec._Query_getDocuments(ctx, field)
+				return res
+			})
+		case "getDocumentsByTag":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDocumentsByTag(ctx, field)
 				return res
 			})
 		case "__type":
@@ -2810,6 +3109,21 @@ func (ec *executionContext) marshalNDocument2ᚖgithubᚗcomᚋgothaᚋniuniuᚑ
 	return ec._Document(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNNewDocument2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐNewDocument(ctx context.Context, v interface{}) (model.NewDocument, error) {
 	res, err := ec.unmarshalInputNewDocument(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3147,6 +3461,28 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalODocuments2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐDocuments(ctx context.Context, sel ast.SelectionSet, v *model.Documents) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Documents(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalInt(*v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

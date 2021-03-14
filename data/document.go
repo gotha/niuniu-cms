@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Document struct {
@@ -28,12 +29,49 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 	}
 }
 
-func (s *DocumentService) GetAll() ([]Document, error) {
+func (s *DocumentService) GetNumDocuments() (int64, error) {
+	var num int64
+	res := s.db.Model(&Document{}).Count(&num)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return num, nil
+}
+
+func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
+
+	query := s.db.Preload("Tags")
+
+	limitDocuments := 50
+	if limit != nil {
+		limitDocuments = *limit
+	}
+	query = query.Limit(limitDocuments)
+
+	if offset != nil {
+		query = query.Offset(*offset)
+	}
+
+	sortColumn := "created_at"
+	if sortBy != nil {
+		sortColumn = *sortBy
+	}
+	sortDescB := true
+	if sortDesc != nil && *sortDesc == false {
+		sortDescB = false
+	}
+
+	query = query.Order(clause.OrderByColumn{
+		Column: clause.Column{Name: sortColumn},
+		Desc:   sortDescB,
+	})
+
 	var docs []Document
-	res := s.db.Preload("Tags").Find(&docs)
+	res := query.Find(&docs)
 	if res.Error != nil {
 		return nil, res.Error
 	}
+
 	return docs, nil
 }
 

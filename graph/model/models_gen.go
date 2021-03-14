@@ -9,6 +9,11 @@ type Document struct {
 	Tags  []*Tag `json:"tags"`
 }
 
+type Documents struct {
+	Documents []*Document `json:"documents"`
+	Count     int         `json:"count"`
+}
+
 type NewDocument struct {
 	Title string   `json:"title"`
 	Body  string   `json:"body"`

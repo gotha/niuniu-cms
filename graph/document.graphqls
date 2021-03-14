@@ -6,6 +6,11 @@ type Document {
   tags: [Tag!]!
 }
 
+type Documents {
+  documents: [Document!]!
+  count: Int!
+}
+
 input NewDocument {
   title: String!
   body: String!
