@@ -18,10 +18,7 @@ func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (*
 		return nil, err
 	}
 
-	return &model.Tag{
-		ID:    tag.ID.String(),
-		Title: input.Title,
-	}, nil
+	return TagToModel(tag), nil
 }
 
 func (r *mutationResolver) UpdateTag(ctx context.Context, id string, input model.UpdateTag) (*model.Tag, error) {
@@ -30,10 +27,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, input model
 		return nil, err
 	}
 
-	return &model.Tag{
-		ID:    tag.ID.String(),
-		Title: tag.Title,
-	}, nil
+	return TagToModel(tag), nil
 }
 
 func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, error) {
@@ -59,19 +53,7 @@ func (r *mutationResolver) CreateDocument(ctx context.Context, input model.NewDo
 		return nil, fmt.Errorf("error saving document: %w", err)
 	}
 
-	var documentTags []*model.Tag
-	for _, i := range tags {
-		documentTags = append(documentTags, &model.Tag{
-			ID:    i.ID.String(),
-			Title: i.Title,
-		})
-	}
-	return &model.Document{
-		ID:    document.ID.String(),
-		Title: document.Title,
-		Body:  document.Body,
-		Tags:  documentTags,
-	}, nil
+	return DocumentToModel(*document), nil
 }
 
 func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input model.UpdateDocument) (*model.Document, error) {
@@ -89,11 +71,8 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	}
 
 	var retval []*model.Tag
-	for _, i := range tags {
-		retval = append(retval, &model.Tag{
-			ID:    i.ID.String(),
-			Title: i.Title,
-		})
+	for _, tag := range tags {
+		retval = append(retval, TagToModel(&tag))
 	}
 
 	return retval, nil
@@ -112,19 +91,7 @@ func (r *queryResolver) GetDocuments(ctx context.Context, first *int, offset *in
 
 	var retval []*model.Document
 	for _, i := range documents {
-		var tags []*model.Tag
-		for _, y := range i.Tags {
-			tags = append(tags, &model.Tag{
-				ID:    y.ID.String(),
-				Title: y.Title,
-			})
-		}
-		retval = append(retval, &model.Document{
-			ID:    i.ID.String(),
-			Title: i.Title,
-			Body:  i.Body,
-			Tags:  tags,
-		})
+		retval = append(retval, DocumentToModel(i))
 	}
 
 	return &model.Documents{
@@ -146,19 +113,7 @@ func (r *queryResolver) GetDocumentsByTag(ctx context.Context, tagIDs []string, 
 
 	var retval []*model.Document
 	for _, i := range documents {
-		var tags []*model.Tag
-		for _, y := range i.Tags {
-			tags = append(tags, &model.Tag{
-				ID:    y.ID.String(),
-				Title: y.Title,
-			})
-		}
-		retval = append(retval, &model.Document{
-			ID:    i.ID.String(),
-			Title: i.Title,
-			Body:  i.Body,
-			Tags:  tags,
-		})
+		retval = append(retval, DocumentToModel(i))
 	}
 
 	return &model.Documents{
