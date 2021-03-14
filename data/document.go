@@ -32,6 +32,20 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 	}
 }
 
+func (s *DocumentService) Get(UUID string) (Document, error) {
+
+	var doc Document
+	res := s.db.
+		Preload("Tags").
+		Where("documents.id = ?", UUID).
+		First(&doc)
+	if res.Error != nil {
+		return Document{}, res.Error
+	}
+
+	return doc, nil
+}
+
 func (s *DocumentService) GetNumDocuments() (int64, error) {
 	var num int64
 	res := s.db.Model(&Document{}).Count(&num)

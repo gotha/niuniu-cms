@@ -78,6 +78,15 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	return retval, nil
 }
 
+func (r *queryResolver) GetDocument(ctx context.Context, id string) (*model.Document, error) {
+	doc, err := r.documentService.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return DocumentToModel(doc), nil
+}
+
 func (r *queryResolver) GetDocuments(ctx context.Context, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) (*model.Documents, error) {
 	documents, err := r.documentService.GetAll(first, offset, sortBy, sortDesc)
 	if err != nil {
