@@ -2,7 +2,7 @@
 type Query {
   tags: [Tag!]!
   getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
-  getDocumentsByTag(tagID: String!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
+  getDocumentsByTag(tagIDs: [String!]!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
 }
 
 type Mutation {

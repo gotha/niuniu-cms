@@ -66,7 +66,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetDocuments      func(childComplexity int, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) int
-		GetDocumentsByTag func(childComplexity int, tagID string, first *int, offset *int, sortBy *string, sortDesc *bool) int
+		GetDocumentsByTag func(childComplexity int, tagIDs []string, first *int, offset *int, sortBy *string, sortDesc *bool) int
 		Tags              func(childComplexity int) int
 	}
 
@@ -87,7 +87,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	GetDocuments(ctx context.Context, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) (*model.Documents, error)
-	GetDocumentsByTag(ctx context.Context, tagID string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error)
+	GetDocumentsByTag(ctx context.Context, tagIDs []string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error)
 }
 
 type executableSchema struct {
@@ -241,7 +241,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetDocumentsByTag(childComplexity, args["tagID"].(string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool)), true
+		return e.complexity.Query.GetDocumentsByTag(childComplexity, args["tagIDs"].([]string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool)), true
 
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
@@ -357,7 +357,7 @@ input UpdateDocument {
 type Query {
   tags: [Tag!]!
   getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
-  getDocumentsByTag(tagID: String!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
+  getDocumentsByTag(tagIDs: [String!]!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
 }
 
 type Mutation {
@@ -518,15 +518,15 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_getDocumentsByTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tagID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 []string
+	if tmp, ok := rawArgs["tagIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
+		arg0, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["tagID"] = arg0
+	args["tagIDs"] = arg0
 	var arg1 *int
 	if tmp, ok := rawArgs["first"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
@@ -1216,7 +1216,7 @@ func (ec *executionContext) _Query_getDocumentsByTag(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetDocumentsByTag(rctx, args["tagID"].(string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool))
+		return ec.resolvers.Query().GetDocumentsByTag(rctx, args["tagIDs"].([]string), args["first"].(*int), args["offset"].(*int), args["sortBy"].(*string), args["sortDesc"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3147,6 +3147,36 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {

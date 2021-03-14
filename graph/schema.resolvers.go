@@ -133,8 +133,38 @@ func (r *queryResolver) GetDocuments(ctx context.Context, first *int, offset *in
 	}, nil
 }
 
-func (r *queryResolver) GetDocumentsByTag(ctx context.Context, tagID string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) GetDocumentsByTag(ctx context.Context, tagIDs []string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error) {
+	documents, err := r.documentService.GetAllByTag(tagIDs, first, offset, sortBy, sortDesc)
+	if err != nil {
+		return nil, err
+	}
+
+	numDocuments, err := r.documentService.GetNumDocumentsWithTag(tagIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	var retval []*model.Document
+	for _, i := range documents {
+		var tags []*model.Tag
+		for _, y := range i.Tags {
+			tags = append(tags, &model.Tag{
+				ID:    y.ID.String(),
+				Title: y.Title,
+			})
+		}
+		retval = append(retval, &model.Document{
+			ID:    i.ID.String(),
+			Title: i.Title,
+			Body:  i.Body,
+			Tags:  tags,
+		})
+	}
+
+	return &model.Documents{
+		Documents: retval,
+		Count:     int(numDocuments),
+	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

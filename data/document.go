@@ -19,6 +19,9 @@ type Document struct {
 	Attachments []Attachment `gorm:"many2many:document_attachments;"`
 }
 
+const defaultLimit = 50
+const defaultSortBy = "created_at"
+
 type DocumentService struct {
 	db *gorm.DB
 }
@@ -42,7 +45,7 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 
 	query := s.db.Preload("Tags")
 
-	limitDocuments := 50
+	limitDocuments := defaultLimit
 	if limit != nil {
 		limitDocuments = *limit
 	}
@@ -52,7 +55,7 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 		query = query.Offset(*offset)
 	}
 
-	sortColumn := "created_at"
+	sortColumn := defaultSortBy
 	if sortBy != nil {
 		sortColumn = *sortBy
 	}
@@ -68,6 +71,57 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 
 	var docs []Document
 	res := query.Find(&docs)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return docs, nil
+}
+
+func (s *DocumentService) GetNumDocumentsWithTag(tagIDs []string) (int64, error) {
+	var num int64
+	res := s.db.Model(&Document{}).
+		Joins("JOIN document_tags AS dt ON dt.document_id = documents.id").
+		Where("dt.tag_id IN ?", tagIDs).
+		Count(&num)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return num, nil
+}
+
+func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
+
+	query := s.db.Preload("Tags")
+
+	limitDocuments := defaultLimit
+	if limit != nil {
+		limitDocuments = *limit
+	}
+	query = query.Limit(limitDocuments)
+
+	if offset != nil {
+		query = query.Offset(*offset)
+	}
+
+	sortColumn := defaultSortBy
+	if sortBy != nil {
+		sortColumn = *sortBy
+	}
+	sortDescB := true
+	if sortDesc != nil && *sortDesc == false {
+		sortDescB = false
+	}
+
+	query = query.Order(clause.OrderByColumn{
+		Column: clause.Column{Name: sortColumn},
+		Desc:   sortDescB,
+	})
+
+	var docs []Document
+	res := query.Joins("JOIN document_tags AS dt ON dt.document_id = documents.id").
+		Where("dt.tag_id IN ?", tagIDs).
+		Find(&docs)
 	if res.Error != nil {
 		return nil, res.Error
 	}
