@@ -3,6 +3,8 @@ type Document {
   id: String!
   title: String!
   body: String!
+  createdAt: String!
+  updatedAt: String!
   tags: [Tag!]!
 }
 

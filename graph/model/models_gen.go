@@ -3,10 +3,12 @@
 package model
 
 type Document struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	Tags  []*Tag `json:"tags"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	Tags      []*Tag `json:"tags"`
 }
 
 type Documents struct {
@@ -25,8 +27,10 @@ type NewTag struct {
 }
 
 type Tag struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type UpdateDocument struct {
