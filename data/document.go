@@ -1,6 +1,7 @@
 package data
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,12 +33,12 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 	}
 }
 
-func (s *DocumentService) Get(UUID string) (Document, error) {
+func (s *DocumentService) Get(id string) (Document, error) {
 
 	var doc Document
 	res := s.db.
 		Preload("Tags").
-		Where("documents.id = ?", UUID).
+		Where("documents.id = ?", id).
 		First(&doc)
 	if res.Error != nil {
 		return Document{}, res.Error
@@ -157,10 +158,43 @@ func (s *DocumentService) New(title string, body string, tags []Tag) (*Document,
 	return doc, nil
 }
 
-func (s *DocumentService) Update(id string, title string) (*Document, error) {
-	panic("not implemented")
+func (s *DocumentService) Update(id string, title *string, body *string, tags []Tag) (*Document, error) {
+	var doc Document
+	res := s.db.
+		Preload("Tags").
+		Where("documents.id = ?", id).
+		First(&doc)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if title == nil && body == nil && tags == nil {
+		return nil, fmt.Errorf("nothing data to be updated")
+	}
+
+	if title != nil {
+		doc.Title = *title
+	}
+	if body != nil {
+		doc.Body = *body
+	}
+
+	if tags != nil {
+		doc.Tags = tags
+	}
+
+	res = s.db.Save(&doc)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &doc, nil
 }
 
 func (s *DocumentService) Delete(id string) error {
-	panic("not implemented")
+	res := s.db.Where("id = ?", id).Delete(&Document{})
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }

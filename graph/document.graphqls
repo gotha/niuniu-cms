@@ -18,7 +18,8 @@ input NewDocument {
 }
 
 input UpdateDocument {
-  title: String!
-  body:  String!
+  title: String
+  body:  String
+  tags: [String]
 }
 

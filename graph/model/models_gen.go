@@ -30,8 +30,9 @@ type Tag struct {
 }
 
 type UpdateDocument struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
+	Title *string   `json:"title"`
+	Body  *string   `json:"body"`
+	Tags  []*string `json:"tags"`
 }
 
 type UpdateTag struct {

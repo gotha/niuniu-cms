@@ -57,11 +57,31 @@ func (r *mutationResolver) CreateDocument(ctx context.Context, input model.NewDo
 }
 
 func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input model.UpdateDocument) (*model.Document, error) {
-	panic(fmt.Errorf("not implemented"))
+	var tags []data.Tag
+	if input.Tags != nil {
+		for _, tagID := range input.Tags {
+			tag, err := r.tagService.Get(*tagID)
+			if err != nil {
+				return nil, err
+			}
+			tags = append(tags, *tag)
+		}
+	}
+
+	doc, err := r.documentService.Update(id, input.Title, input.Body, tags)
+	if err != nil {
+		return nil, err
+	}
+
+	return DocumentToModel(*doc), nil
 }
 
 func (r *mutationResolver) DeleteDocument(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented"))
+	err := r.documentService.Delete(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
