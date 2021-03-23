@@ -38,6 +38,7 @@ func (s *DocumentService) Get(id string) (Document, error) {
 	var doc Document
 	res := s.db.
 		Preload("Tags").
+		Preload("Attachments").
 		Where("documents.id = ?", id).
 		First(&doc)
 	if res.Error != nil {
@@ -58,7 +59,7 @@ func (s *DocumentService) GetNumDocuments() (int64, error) {
 
 func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
 
-	query := s.db.Preload("Tags")
+	query := s.db.Preload("Tags").Preload("Attachments")
 
 	limitDocuments := defaultLimit
 	if limit != nil {
@@ -107,7 +108,7 @@ func (s *DocumentService) GetNumDocumentsWithTag(tagIDs []string) (int64, error)
 
 func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
 
-	query := s.db.Preload("Tags")
+	query := s.db.Preload("Tags").Preload("Attachments")
 
 	limitDocuments := defaultLimit
 	if limit != nil {
@@ -144,12 +145,13 @@ func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, 
 	return docs, nil
 }
 
-func (s *DocumentService) New(title string, body string, tags []Tag) (*Document, error) {
+func (s *DocumentService) New(title string, body string, tags []Tag, attachments []Attachment) (*Document, error) {
 	doc := &Document{
 		Title: title,
 		Body:  body,
 	}
 	doc.Tags = append(doc.Tags, tags...)
+	doc.Attachments = append(doc.Attachments, attachments...)
 
 	res := s.db.Save(doc)
 	if res.Error != nil {
@@ -158,10 +160,11 @@ func (s *DocumentService) New(title string, body string, tags []Tag) (*Document,
 	return doc, nil
 }
 
-func (s *DocumentService) Update(id string, title *string, body *string, tags []Tag) (*Document, error) {
+func (s *DocumentService) Update(id string, title *string, body *string, tags []Tag, attachments []Attachment) (*Document, error) {
 	var doc Document
 	res := s.db.
 		Preload("Tags").
+		Preload("Attachments").
 		Where("documents.id = ?", id).
 		First(&doc)
 	if res.Error != nil {
@@ -181,6 +184,10 @@ func (s *DocumentService) Update(id string, title *string, body *string, tags []
 
 	if tags != nil {
 		doc.Tags = tags
+	}
+
+	if attachments != nil {
+		doc.Attachments = attachments
 	}
 
 	res = s.db.Save(&doc)

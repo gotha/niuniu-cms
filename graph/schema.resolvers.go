@@ -40,15 +40,27 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, erro
 
 func (r *mutationResolver) CreateDocument(ctx context.Context, input model.NewDocument) (*model.Document, error) {
 	var tags []data.Tag
-	for _, tagID := range input.Tags {
-		tag, err := r.tagService.Get(tagID)
-		if err != nil {
-			return nil, fmt.Errorf("error fetching tag: %w", err)
+	var err error
+	if input.Tags != nil {
+		if len(input.Tags) > 0 {
+			tags, err = r.tagService.GetMultiple(input.Tags)
+			if err != nil {
+				return nil, err
+			}
 		}
-		tags = append(tags, *tag)
 	}
 
-	document, err := r.documentService.New(input.Title, input.Body, tags)
+	var attachments []data.Attachment
+	if input.Attachments != nil {
+		if len(input.Attachments) > 0 {
+			attachments, err = r.attachmentService.GetMultiple(input.Attachments)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	document, err := r.documentService.New(input.Title, input.Body, tags, attachments)
 	if err != nil {
 		return nil, fmt.Errorf("error saving document: %w", err)
 	}
@@ -58,17 +70,27 @@ func (r *mutationResolver) CreateDocument(ctx context.Context, input model.NewDo
 
 func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input model.UpdateDocument) (*model.Document, error) {
 	var tags []data.Tag
+	var err error
 	if input.Tags != nil {
-		for _, tagID := range input.Tags {
-			tag, err := r.tagService.Get(*tagID)
+		if len(input.Tags) > 0 {
+			tags, err = r.tagService.GetMultiple(input.Tags)
 			if err != nil {
 				return nil, err
 			}
-			tags = append(tags, *tag)
 		}
 	}
 
-	doc, err := r.documentService.Update(id, input.Title, input.Body, tags)
+	var attachments []data.Attachment
+	if input.Attachments != nil {
+		if len(input.Attachments) > 0 {
+			attachments, err = r.attachmentService.GetMultiple(input.Attachments)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	doc, err := r.documentService.Update(id, input.Title, input.Body, tags, attachments)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +100,30 @@ func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input 
 
 func (r *mutationResolver) DeleteDocument(ctx context.Context, id string) (bool, error) {
 	err := r.documentService.Delete(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) CreateAttachment(ctx context.Context, input model.NewAttachment) (*model.Attachment, error) {
+	a, err := r.attachmentService.New(input.URL, input.Title)
+	if err != nil {
+		return nil, err
+	}
+	return AttachmentToModel(*a), nil
+}
+
+func (r *mutationResolver) UpdateAttachment(ctx context.Context, id string, input model.UpdateAttachment) (*model.Attachment, error) {
+	a, err := r.attachmentService.Update(id, input.URL, input.Title)
+	if err != nil {
+		return nil, err
+	}
+	return AttachmentToModel(*a), nil
+}
+
+func (r *mutationResolver) DeleteAttachment(ctx context.Context, id string) (bool, error) {
+	err := r.attachmentService.Delete(id)
 	if err != nil {
 		return false, err
 	}

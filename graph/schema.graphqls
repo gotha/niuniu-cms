@@ -14,5 +14,70 @@ type Mutation {
   createDocument(input: NewDocument!): Document!
   updateDocument(id: String!, input: UpdateDocument!): Document!
   deleteDocument(id: String!): Boolean!
+
+  createAttachment(input: NewAttachment!): Attachment!
+  updateAttachment(id: String!, input: UpdateAttachment!): Attachment!
+  deleteAttachment(id: String!): Boolean!
 }
 
+type Document {
+  id: String!
+  title: String!
+  body: String!
+  createdAt: String!
+  updatedAt: String!
+  tags: [Tag!]!
+  attachments: [Attachment!]!
+}
+
+type Documents {
+  documents: [Document!]!
+  count: Int!
+}
+
+input NewDocument {
+  title: String!
+  body: String!
+  tags: [String!]
+  attachments: [String!]
+}
+
+input UpdateDocument {
+  title: String
+  body:  String
+  tags: [String!]
+  attachments: [String!]
+}
+
+type Tag {
+  id: String!
+  title: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input NewTag {
+  title: String!
+}
+
+input UpdateTag {
+  title: String!
+}
+
+type Attachment {
+  id: String!
+  title: String
+  url: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input NewAttachment {
+  title: String
+  url: String!
+}
+
+input UpdateAttachment {
+  title: String
+  url: String!
+}

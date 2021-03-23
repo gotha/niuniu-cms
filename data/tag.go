@@ -36,11 +36,20 @@ func (s *TagService) GetAll() ([]Tag, error) {
 func (s *TagService) Get(ID string) (*Tag, error) {
 	var tag Tag
 	res := s.db.Where("id = ?", ID).First(&tag)
-	if res.RowsAffected < 1 {
-		return nil, fmt.Errorf("there is no tag with ID %s", ID)
+	if res.Error != nil {
+		return nil, fmt.Errorf("error getting tag with ID %s: %w", ID, res.Error)
 	}
 
 	return &tag, nil
+}
+
+func (s *TagService) GetMultiple(IDs []string) ([]Tag, error) {
+	var tags []Tag
+	res := s.db.Where("id IN ?", IDs).Find(&tags)
+	if res.Error != nil && res.Error != gorm.ErrRecordNotFound {
+		return nil, res.Error
+	}
+	return tags, nil
 }
 
 func (s *TagService) New(title string) (*Tag, error) {
@@ -64,14 +73,12 @@ func (s *TagService) New(title string) (*Tag, error) {
 
 func (s *TagService) Update(id string, title string) (*Tag, error) {
 
-	var existingTag Tag
-	res := s.db.Where("title = ? AND id != ?", title, id).First(&existingTag)
-	if res.RowsAffected > 0 {
-		return nil, fmt.Errorf("tag with such title already exists")
+	var tag Tag
+	res := s.db.Where("id != ?", id).First(&id)
+	if res.Error != nil {
+		return nil, fmt.Errorf("err fetching tag %s: %w", id, res.Error)
 	}
 
-	var tag Tag
-	s.db.Where("id = ?", id).First(&tag)
 	tag.Title = title
 
 	res = s.db.Save(&tag)
@@ -83,7 +90,6 @@ func (s *TagService) Update(id string, title string) (*Tag, error) {
 }
 
 func (s *TagService) Delete(id string) error {
-
 	var tag Tag
 	res := s.db.Where("id = ?", id).Delete(&tag)
 	if res.Error != nil {

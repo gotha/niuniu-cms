@@ -20,12 +20,28 @@ func DocumentToModel(doc data.Document) *model.Document {
 	for _, tag := range doc.Tags {
 		tags = append(tags, TagToModel(&tag))
 	}
+
+	var attachments []*model.Attachment
+	for _, a := range doc.Attachments {
+		attachments = append(attachments, AttachmentToModel(a))
+	}
 	return &model.Document{
-		ID:        doc.ID.String(),
-		Title:     doc.Title,
-		Body:      doc.Body,
-		Tags:      tags,
-		CreatedAt: doc.CreatedAt.UTC().String(),
-		UpdatedAt: doc.UpdatedAt.UTC().String(),
+		ID:          doc.ID.String(),
+		Title:       doc.Title,
+		Body:        doc.Body,
+		Tags:        tags,
+		Attachments: attachments,
+		CreatedAt:   doc.CreatedAt.UTC().String(),
+		UpdatedAt:   doc.UpdatedAt.UTC().String(),
+	}
+}
+
+func AttachmentToModel(a data.Attachment) *model.Attachment {
+	return &model.Attachment{
+		ID:        a.ID.String(),
+		Title:     &a.Title,
+		URL:       a.URL,
+		CreatedAt: a.CreatedAt.UTC().String(),
+		UpdatedAt: a.UpdatedAt.UTC().String(),
 	}
 }

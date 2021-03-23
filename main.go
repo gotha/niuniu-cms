@@ -37,9 +37,11 @@ func main() {
 
 	documentService := data.NewDocumentService(db)
 	tagService := data.NewTagService(db)
+	attachmentService := data.NewAttachmentService(db)
 	resolver := graph.NewResolver(
 		tagService,
 		documentService,
+		attachmentService,
 	)
 	gqlconfig := generated.Config{
 		Resolvers: resolver,

@@ -2,13 +2,22 @@
 
 package model
 
+type Attachment struct {
+	ID        string  `json:"id"`
+	Title     *string `json:"title"`
+	URL       string  `json:"url"`
+	CreatedAt string  `json:"createdAt"`
+	UpdatedAt string  `json:"updatedAt"`
+}
+
 type Document struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
-	Tags      []*Tag `json:"tags"`
+	ID          string        `json:"id"`
+	Title       string        `json:"title"`
+	Body        string        `json:"body"`
+	CreatedAt   string        `json:"createdAt"`
+	UpdatedAt   string        `json:"updatedAt"`
+	Tags        []*Tag        `json:"tags"`
+	Attachments []*Attachment `json:"attachments"`
 }
 
 type Documents struct {
@@ -16,10 +25,16 @@ type Documents struct {
 	Count     int         `json:"count"`
 }
 
+type NewAttachment struct {
+	Title *string `json:"title"`
+	URL   string  `json:"url"`
+}
+
 type NewDocument struct {
-	Title string   `json:"title"`
-	Body  string   `json:"body"`
-	Tags  []string `json:"tags"`
+	Title       string   `json:"title"`
+	Body        string   `json:"body"`
+	Tags        []string `json:"tags"`
+	Attachments []string `json:"attachments"`
 }
 
 type NewTag struct {
@@ -33,10 +48,16 @@ type Tag struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
+type UpdateAttachment struct {
+	Title *string `json:"title"`
+	URL   string  `json:"url"`
+}
+
 type UpdateDocument struct {
-	Title *string   `json:"title"`
-	Body  *string   `json:"body"`
-	Tags  []*string `json:"tags"`
+	Title       *string  `json:"title"`
+	Body        *string  `json:"body"`
+	Tags        []string `json:"tags"`
+	Attachments []string `json:"attachments"`
 }
 
 type UpdateTag struct {
