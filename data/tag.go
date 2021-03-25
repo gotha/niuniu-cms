@@ -74,7 +74,7 @@ func (s *TagService) New(title string) (*Tag, error) {
 func (s *TagService) Update(id string, title string) (*Tag, error) {
 
 	var tag Tag
-	res := s.db.Where("id != ?", id).First(&id)
+	res := s.db.Where("id != ?", id).First(&tag)
 	if res.Error != nil {
 		return nil, fmt.Errorf("err fetching tag %s: %w", id, res.Error)
 	}
