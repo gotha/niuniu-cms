@@ -13,6 +13,7 @@ import (
 	"github.com/gotha/niuniu-cms/db"
 	"github.com/gotha/niuniu-cms/graph"
 	"github.com/gotha/niuniu-cms/graph/generated"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -50,7 +51,8 @@ func main() {
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlconfig))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+
+	http.Handle("/query", cors.Default().Handler(srv))
 
 	if os.Getenv("LAMBDA") == "true" {
 		algnhsa.ListenAndServe(http.DefaultServeMux, nil)
