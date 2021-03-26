@@ -71,22 +71,21 @@ func (s *TagService) New(title string) (*Tag, error) {
 	return tag, nil
 }
 
-func (s *TagService) Update(id string, title string) (*Tag, error) {
+func (s *TagService) Update(ID string, title string) (*Tag, error) {
 
-	var tag Tag
-	res := s.db.Where("id != ?", id).First(&tag)
-	if res.Error != nil {
-		return nil, fmt.Errorf("err fetching tag %s: %w", id, res.Error)
+	tag, err := s.Get(ID)
+	if err != nil {
+		return nil, fmt.Errorf("err fetching tag %s: %w", ID, err)
 	}
 
 	tag.Title = title
 
-	res = s.db.Save(&tag)
+	res := s.db.Save(&tag)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	return &tag, nil
+	return tag, nil
 }
 
 func (s *TagService) Delete(id string) error {
