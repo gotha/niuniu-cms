@@ -15,7 +15,7 @@ import (
 func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (*model.Tag, error) {
 	tag, err := r.tagService.New(input.Title)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tagService was unable to create tag: %w", err)
 	}
 
 	return TagToModel(tag), nil
@@ -24,7 +24,7 @@ func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (*
 func (r *mutationResolver) UpdateTag(ctx context.Context, id string, input model.UpdateTag) (*model.Tag, error) {
 	tag, err := r.tagService.Update(id, input.Title)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tagService was unable to update tag: %w", err)
 	}
 
 	return TagToModel(tag), nil
@@ -33,7 +33,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, input model
 func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, error) {
 	err := r.tagService.Delete(id)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("tagService was unable to delete tag: %w", err)
 	}
 	return true, nil
 }
