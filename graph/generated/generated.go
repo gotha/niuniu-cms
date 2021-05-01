@@ -342,7 +342,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetDocument(childComplexity, args["ID"].(string)), true
+		return e.complexity.Query.GetDocument(childComplexity, args["id"].(string)), true
 
 	case "Query.getDocuments":
 		if e.complexity.Query.GetDocuments == nil {
@@ -470,7 +470,7 @@ var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `
 type Query {
   tags: [Tag!]!
-  getDocument(ID: String!): Document!
+  getDocument(id: String!): Document!
   getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
   getDocumentsByTag(tagIDs: [String!]!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
 }
@@ -739,14 +739,14 @@ func (ec *executionContext) field_Query_getDocument_args(ctx context.Context, ra
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["ID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["ID"] = arg0
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1815,7 +1815,7 @@ func (ec *executionContext) _Query_getDocument(ctx context.Context, field graphq
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetDocument(rctx, args["ID"].(string))
+		return ec.resolvers.Query().GetDocument(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

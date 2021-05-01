@@ -33,19 +33,19 @@ func (s *TagService) GetAll() ([]Tag, error) {
 	return tags, nil
 }
 
-func (s *TagService) Get(ID string) (*Tag, error) {
+func (s *TagService) Get(id string) (*Tag, error) {
 	var tag Tag
-	res := s.db.Where("id = ?", ID).First(&tag)
+	res := s.db.Where("id = ?", id).First(&tag)
 	if res.Error != nil {
-		return nil, fmt.Errorf("error getting tag with ID %s: %w", ID, res.Error)
+		return nil, fmt.Errorf("error getting tag with id %s: %w", id, res.Error)
 	}
 
 	return &tag, nil
 }
 
-func (s *TagService) GetMultiple(IDs []string) ([]Tag, error) {
+func (s *TagService) GetMultiple(ids []string) ([]Tag, error) {
 	var tags []Tag
-	res := s.db.Where("id IN ?", IDs).Find(&tags)
+	res := s.db.Where("id IN ?", ids).Find(&tags)
 	if res.Error != nil && res.Error != gorm.ErrRecordNotFound {
 		return nil, res.Error
 	}
@@ -71,11 +71,11 @@ func (s *TagService) New(title string) (*Tag, error) {
 	return tag, nil
 }
 
-func (s *TagService) Update(ID string, title string) (*Tag, error) {
+func (s *TagService) Update(id string, title string) (*Tag, error) {
 
-	tag, err := s.Get(ID)
+	tag, err := s.Get(id)
 	if err != nil {
-		return nil, fmt.Errorf("err fetching tag %s: %w", ID, err)
+		return nil, fmt.Errorf("err fetching tag %s: %w", id, err)
 	}
 
 	tag.Title = title

@@ -29,9 +29,9 @@ func NewAttachmentService(db *gorm.DB) *AttachmentService {
 	}
 }
 
-func (s *AttachmentService) Get(ID string) (*Attachment, error) {
+func (s *AttachmentService) Get(id string) (*Attachment, error) {
 	var a *Attachment
-	res := s.db.Where("id = ?", ID).First(a)
+	res := s.db.Where("id = ?", id).First(a)
 	if res.RowsAffected < 1 {
 		return nil, fmt.Errorf("no such attachment")
 	}
@@ -41,9 +41,9 @@ func (s *AttachmentService) Get(ID string) (*Attachment, error) {
 	return a, nil
 }
 
-func (s *AttachmentService) GetMultiple(IDs []string) ([]Attachment, error) {
+func (s *AttachmentService) GetMultiple(ids []string) ([]Attachment, error) {
 	var attachments []Attachment
-	res := s.db.Where("id IN ?", IDs).Find(&attachments)
+	res := s.db.Where("id IN ?", ids).Find(&attachments)
 	if res.Error != nil {
 		return nil, res.Error
 	}

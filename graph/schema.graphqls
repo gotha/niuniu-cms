@@ -1,7 +1,7 @@
 
 type Query {
   tags: [Tag!]!
-  getDocument(ID: String!): Document!
+  getDocument(id: String!): Document!
   getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
   getDocumentsByTag(tagIDs: [String!]!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
 }
