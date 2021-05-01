@@ -7,13 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gotha/niuniu-cms/data"
 	"github.com/gotha/niuniu-cms/graph/generated"
 	"github.com/gotha/niuniu-cms/graph/model"
 )
 
 func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (*model.Tag, error) {
-	tag, err := r.tagService.New(input.Title)
+	tag, err := r.tagService.Create(input.Title)
 	if err != nil {
 		return nil, fmt.Errorf("tagService was unable to create tag: %w", err)
 	}
@@ -39,58 +38,16 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, erro
 }
 
 func (r *mutationResolver) CreateDocument(ctx context.Context, input model.NewDocument) (*model.Document, error) {
-	var tags []data.Tag
-	var err error
-	if input.Tags != nil {
-		if len(input.Tags) > 0 {
-			tags, err = r.tagService.GetMultiple(input.Tags)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	var attachments []data.Attachment
-	if input.Attachments != nil {
-		if len(input.Attachments) > 0 {
-			attachments, err = r.attachmentService.GetMultiple(input.Attachments)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	document, err := r.documentService.New(input.Title, input.Body, tags, attachments)
+	doc, err := r.documentService.Create(input.Title, input.Body, input.Tags)
 	if err != nil {
-		return nil, fmt.Errorf("error saving document: %w", err)
+		return nil, err
 	}
 
-	return DocumentToModel(*document), nil
+	return DocumentToModel(*doc), nil
 }
 
 func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input model.UpdateDocument) (*model.Document, error) {
-	var tags []data.Tag
-	var err error
-	if input.Tags != nil {
-		if len(input.Tags) > 0 {
-			tags, err = r.tagService.GetMultiple(input.Tags)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	var attachments []data.Attachment
-	if input.Attachments != nil {
-		if len(input.Attachments) > 0 {
-			attachments, err = r.attachmentService.GetMultiple(input.Attachments)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	doc, err := r.documentService.Update(id, input.Title, input.Body, tags, attachments)
+	doc, err := r.documentService.Update(id, input.Title, input.Body, input.Tags)
 	if err != nil {
 		return nil, err
 	}
@@ -100,30 +57,6 @@ func (r *mutationResolver) UpdateDocument(ctx context.Context, id string, input 
 
 func (r *mutationResolver) DeleteDocument(ctx context.Context, id string) (bool, error) {
 	err := r.documentService.Delete(id)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func (r *mutationResolver) CreateAttachment(ctx context.Context, input model.NewAttachment) (*model.Attachment, error) {
-	a, err := r.attachmentService.New(input.URL, input.Title)
-	if err != nil {
-		return nil, err
-	}
-	return AttachmentToModel(*a), nil
-}
-
-func (r *mutationResolver) UpdateAttachment(ctx context.Context, id string, input model.UpdateAttachment) (*model.Attachment, error) {
-	a, err := r.attachmentService.Update(id, input.URL, input.Title)
-	if err != nil {
-		return nil, err
-	}
-	return AttachmentToModel(*a), nil
-}
-
-func (r *mutationResolver) DeleteAttachment(ctx context.Context, id string) (bool, error) {
-	err := r.attachmentService.Delete(id)
 	if err != nil {
 		return false, err
 	}
@@ -150,16 +83,11 @@ func (r *queryResolver) GetDocument(ctx context.Context, id string) (*model.Docu
 		return nil, err
 	}
 
-	return DocumentToModel(doc), nil
+	return DocumentToModel(*doc), nil
 }
 
 func (r *queryResolver) GetDocuments(ctx context.Context, first *int, offset *int, perPage *int, sortBy *string, sortDesc *bool) (*model.Documents, error) {
-	documents, err := r.documentService.GetAll(first, offset, sortBy, sortDesc)
-	if err != nil {
-		return nil, err
-	}
-
-	numDocuments, err := r.documentService.GetNumDocuments()
+	documents, num, err := r.documentService.GetAll(first, offset, sortBy, sortDesc)
 	if err != nil {
 		return nil, err
 	}
@@ -171,17 +99,12 @@ func (r *queryResolver) GetDocuments(ctx context.Context, first *int, offset *in
 
 	return &model.Documents{
 		Documents: retval,
-		Count:     int(numDocuments),
+		Count:     num,
 	}, nil
 }
 
 func (r *queryResolver) GetDocumentsByTag(ctx context.Context, tagIDs []string, first *int, offset *int, sortBy *string, sortDesc *bool) (*model.Documents, error) {
-	documents, err := r.documentService.GetAllByTag(tagIDs, first, offset, sortBy, sortDesc)
-	if err != nil {
-		return nil, err
-	}
-
-	numDocuments, err := r.documentService.GetNumDocumentsWithTag(tagIDs)
+	documents, num, err := r.documentService.GetAllByTag(tagIDs, first, offset, sortBy, sortDesc)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +116,7 @@ func (r *queryResolver) GetDocumentsByTag(ctx context.Context, tagIDs []string, 
 
 	return &model.Documents{
 		Documents: retval,
-		Count:     int(numDocuments),
+		Count:     num,
 	}, nil
 }
 

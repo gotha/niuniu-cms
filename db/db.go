@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gotha/niuniu-cms/data"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,7 +23,7 @@ func InitDB(c *Config) (*gorm.DB, error) {
 			return nil, fmt.Errorf("could not create uuid-ossp extension")
 		}
 
-		err = db.AutoMigrate(&data.Document{}, &data.Tag{}, &data.Attachment{})
+		err = db.AutoMigrate(&Document{}, &Tag{})
 		if err != nil {
 			return nil, fmt.Errorf("could not migrate database schema: %w", err)
 		}

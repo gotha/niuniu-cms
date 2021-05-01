@@ -14,10 +14,6 @@ type Mutation {
   createDocument(input: NewDocument!): Document!
   updateDocument(id: String!, input: UpdateDocument!): Document!
   deleteDocument(id: String!): Boolean!
-
-  createAttachment(input: NewAttachment!): Attachment!
-  updateAttachment(id: String!, input: UpdateAttachment!): Attachment!
-  deleteAttachment(id: String!): Boolean!
 }
 
 type Document {
@@ -27,7 +23,6 @@ type Document {
   createdAt: String!
   updatedAt: String!
   tags: [Tag!]!
-  attachments: [Attachment!]!
 }
 
 type Documents {
@@ -39,14 +34,12 @@ input NewDocument {
   title: String!
   body: String!
   tags: [String!]
-  attachments: [String!]
 }
 
 input UpdateDocument {
   title: String
   body:  String
   tags: [String!]
-  attachments: [String!]
 }
 
 type Tag {
@@ -62,22 +55,4 @@ input NewTag {
 
 input UpdateTag {
   title: String!
-}
-
-type Attachment {
-  id: String!
-  title: String
-  url: String!
-  createdAt: String!
-  updatedAt: String!
-}
-
-input NewAttachment {
-  title: String
-  url: String!
-}
-
-input UpdateAttachment {
-  title: String
-  url: String!
 }

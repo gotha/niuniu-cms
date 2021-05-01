@@ -1,14 +1,12 @@
 package graph
 
-//go:generate moq -out ./tag_service_mock.go . tagService
-
-import "github.com/gotha/niuniu-cms/data"
+import "github.com/gotha/niuniu-cms/db"
 
 type tagService interface {
-	GetAll() ([]data.Tag, error)
-	Get(id string) (*data.Tag, error)
-	GetMultiple(ids []string) ([]data.Tag, error)
-	New(title string) (*data.Tag, error)
-	Update(id string, title string) (*data.Tag, error)
+	GetAll() ([]db.Tag, error)
+	Get(id string) (*db.Tag, error)
+	GetMultiple(ids []string) ([]db.Tag, error)
+	Create(title string) (*db.Tag, error)
+	Update(id string, title string) (*db.Tag, error)
 	Delete(id string) error
 }

@@ -43,22 +43,13 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Attachment struct {
+	Document struct {
+		Body      func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Tags      func(childComplexity int) int
 		Title     func(childComplexity int) int
-		URL       func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
-	}
-
-	Document struct {
-		Attachments func(childComplexity int) int
-		Body        func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Tags        func(childComplexity int) int
-		Title       func(childComplexity int) int
-		UpdatedAt   func(childComplexity int) int
 	}
 
 	Documents struct {
@@ -67,15 +58,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAttachment func(childComplexity int, input model.NewAttachment) int
-		CreateDocument   func(childComplexity int, input model.NewDocument) int
-		CreateTag        func(childComplexity int, input model.NewTag) int
-		DeleteAttachment func(childComplexity int, id string) int
-		DeleteDocument   func(childComplexity int, id string) int
-		DeleteTag        func(childComplexity int, id string) int
-		UpdateAttachment func(childComplexity int, id string, input model.UpdateAttachment) int
-		UpdateDocument   func(childComplexity int, id string, input model.UpdateDocument) int
-		UpdateTag        func(childComplexity int, id string, input model.UpdateTag) int
+		CreateDocument func(childComplexity int, input model.NewDocument) int
+		CreateTag      func(childComplexity int, input model.NewTag) int
+		DeleteDocument func(childComplexity int, id string) int
+		DeleteTag      func(childComplexity int, id string) int
+		UpdateDocument func(childComplexity int, id string, input model.UpdateDocument) int
+		UpdateTag      func(childComplexity int, id string, input model.UpdateTag) int
 	}
 
 	Query struct {
@@ -100,9 +88,6 @@ type MutationResolver interface {
 	CreateDocument(ctx context.Context, input model.NewDocument) (*model.Document, error)
 	UpdateDocument(ctx context.Context, id string, input model.UpdateDocument) (*model.Document, error)
 	DeleteDocument(ctx context.Context, id string) (bool, error)
-	CreateAttachment(ctx context.Context, input model.NewAttachment) (*model.Attachment, error)
-	UpdateAttachment(ctx context.Context, id string, input model.UpdateAttachment) (*model.Attachment, error)
-	DeleteAttachment(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	Tags(ctx context.Context) ([]*model.Tag, error)
@@ -125,48 +110,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Attachment.createdAt":
-		if e.complexity.Attachment.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.Attachment.CreatedAt(childComplexity), true
-
-	case "Attachment.id":
-		if e.complexity.Attachment.ID == nil {
-			break
-		}
-
-		return e.complexity.Attachment.ID(childComplexity), true
-
-	case "Attachment.title":
-		if e.complexity.Attachment.Title == nil {
-			break
-		}
-
-		return e.complexity.Attachment.Title(childComplexity), true
-
-	case "Attachment.url":
-		if e.complexity.Attachment.URL == nil {
-			break
-		}
-
-		return e.complexity.Attachment.URL(childComplexity), true
-
-	case "Attachment.updatedAt":
-		if e.complexity.Attachment.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.Attachment.UpdatedAt(childComplexity), true
-
-	case "Document.attachments":
-		if e.complexity.Document.Attachments == nil {
-			break
-		}
-
-		return e.complexity.Document.Attachments(childComplexity), true
 
 	case "Document.body":
 		if e.complexity.Document.Body == nil {
@@ -224,18 +167,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Documents.Documents(childComplexity), true
 
-	case "Mutation.createAttachment":
-		if e.complexity.Mutation.CreateAttachment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createAttachment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateAttachment(childComplexity, args["input"].(model.NewAttachment)), true
-
 	case "Mutation.createDocument":
 		if e.complexity.Mutation.CreateDocument == nil {
 			break
@@ -260,18 +191,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateTag(childComplexity, args["input"].(model.NewTag)), true
 
-	case "Mutation.deleteAttachment":
-		if e.complexity.Mutation.DeleteAttachment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteAttachment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteAttachment(childComplexity, args["id"].(string)), true
-
 	case "Mutation.deleteDocument":
 		if e.complexity.Mutation.DeleteDocument == nil {
 			break
@@ -295,18 +214,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteTag(childComplexity, args["id"].(string)), true
-
-	case "Mutation.updateAttachment":
-		if e.complexity.Mutation.UpdateAttachment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateAttachment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateAttachment(childComplexity, args["id"].(string), args["input"].(model.UpdateAttachment)), true
 
 	case "Mutation.updateDocument":
 		if e.complexity.Mutation.UpdateDocument == nil {
@@ -483,10 +390,6 @@ type Mutation {
   createDocument(input: NewDocument!): Document!
   updateDocument(id: String!, input: UpdateDocument!): Document!
   deleteDocument(id: String!): Boolean!
-
-  createAttachment(input: NewAttachment!): Attachment!
-  updateAttachment(id: String!, input: UpdateAttachment!): Attachment!
-  deleteAttachment(id: String!): Boolean!
 }
 
 type Document {
@@ -496,7 +399,6 @@ type Document {
   createdAt: String!
   updatedAt: String!
   tags: [Tag!]!
-  attachments: [Attachment!]!
 }
 
 type Documents {
@@ -508,14 +410,12 @@ input NewDocument {
   title: String!
   body: String!
   tags: [String!]
-  attachments: [String!]
 }
 
 input UpdateDocument {
   title: String
   body:  String
   tags: [String!]
-  attachments: [String!]
 }
 
 type Tag {
@@ -532,24 +432,6 @@ input NewTag {
 input UpdateTag {
   title: String!
 }
-
-type Attachment {
-  id: String!
-  title: String
-  url: String!
-  createdAt: String!
-  updatedAt: String!
-}
-
-input NewAttachment {
-  title: String
-  url: String!
-}
-
-input UpdateAttachment {
-  title: String
-  url: String!
-}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -557,21 +439,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) field_Mutation_createAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.NewAttachment
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewAttachment2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐNewAttachment(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Mutation_createDocument_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -603,21 +470,6 @@ func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, r
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteDocument_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -645,30 +497,6 @@ func (ec *executionContext) field_Mutation_deleteTag_args(ctx context.Context, r
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 model.UpdateAttachment
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateAttachment2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐUpdateAttachment(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
 	return args, nil
 }
 
@@ -890,178 +718,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attachment",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Attachment_title(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attachment",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Attachment_url(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attachment",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Attachment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attachment",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Attachment_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attachment",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Document_id(ctx context.Context, field graphql.CollectedField, obj *model.Document) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1270,41 +926,6 @@ func (ec *executionContext) _Document_tags(ctx context.Context, field graphql.Co
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
 	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Document_attachments(ctx context.Context, field graphql.CollectedField, obj *model.Document) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Document",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Attachments, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Attachment)
-	fc.Result = res
-	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Documents_documents(ctx context.Context, field graphql.CollectedField, obj *model.Documents) (ret graphql.Marshaler) {
@@ -1613,132 +1234,6 @@ func (ec *executionContext) _Mutation_deleteDocument(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteDocument(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createAttachment_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAttachment(rctx, args["input"].(model.NewAttachment))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Attachment)
-	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_updateAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateAttachment_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateAttachment(rctx, args["id"].(string), args["input"].(model.UpdateAttachment))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Attachment)
-	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_deleteAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteAttachment_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAttachment(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3208,34 +2703,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewAttachment(ctx context.Context, obj interface{}) (model.NewAttachment, error) {
-	var it model.NewAttachment
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "title":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "url":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
-			it.URL, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputNewDocument(ctx context.Context, obj interface{}) (model.NewDocument, error) {
 	var it model.NewDocument
 	var asMap = obj.(map[string]interface{})
@@ -3266,14 +2733,6 @@ func (ec *executionContext) unmarshalInputNewDocument(ctx context.Context, obj i
 			if err != nil {
 				return it, err
 			}
-		case "attachments":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachments"))
-			it.Attachments, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
@@ -3291,34 +2750,6 @@ func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj interf
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
 			it.Title, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdateAttachment(ctx context.Context, obj interface{}) (model.UpdateAttachment, error) {
-	var it model.UpdateAttachment
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "title":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "url":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
-			it.URL, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3358,14 +2789,6 @@ func (ec *executionContext) unmarshalInputUpdateDocument(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "attachments":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachments"))
-			it.Attachments, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
@@ -3399,50 +2822,6 @@ func (ec *executionContext) unmarshalInputUpdateTag(ctx context.Context, obj int
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
-
-var attachmentImplementors = []string{"Attachment"}
-
-func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, attachmentImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Attachment")
-		case "id":
-			out.Values[i] = ec._Attachment_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Attachment_title(ctx, field, obj)
-		case "url":
-			out.Values[i] = ec._Attachment_url(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "createdAt":
-			out.Values[i] = ec._Attachment_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updatedAt":
-			out.Values[i] = ec._Attachment_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
 
 var documentImplementors = []string{"Document"}
 
@@ -3482,11 +2861,6 @@ func (ec *executionContext) _Document(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "tags":
 			out.Values[i] = ec._Document_tags(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "attachments":
-			out.Values[i] = ec._Document_attachments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3575,21 +2949,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteDocument":
 			out.Values[i] = ec._Mutation_deleteDocument(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "createAttachment":
-			out.Values[i] = ec._Mutation_createAttachment(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updateAttachment":
-			out.Values[i] = ec._Mutation_updateAttachment(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "deleteAttachment":
-			out.Values[i] = ec._Mutation_deleteAttachment(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3971,57 +3330,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAttachment2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
-	return ec._Attachment(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Attachment(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4101,11 +3409,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNNewAttachment2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐNewAttachment(ctx context.Context, v interface{}) (model.NewAttachment, error) {
-	res, err := ec.unmarshalInputNewAttachment(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewDocument2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐNewDocument(ctx context.Context, v interface{}) (model.NewDocument, error) {
@@ -4212,11 +3515,6 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋgothaᚋniuniuᚑcms�
 		return graphql.Null
 	}
 	return ec._Tag(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNUpdateAttachment2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐUpdateAttachment(ctx context.Context, v interface{}) (model.UpdateAttachment, error) {
-	res, err := ec.unmarshalInputUpdateAttachment(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateDocument2githubᚗcomᚋgothaᚋniuniuᚑcmsᚋgraphᚋmodelᚐUpdateDocument(ctx context.Context, v interface{}) (model.UpdateDocument, error) {

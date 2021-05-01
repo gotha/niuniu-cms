@@ -9,10 +9,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/akrylysov/algnhsa"
-	"github.com/gotha/niuniu-cms/data"
 	"github.com/gotha/niuniu-cms/db"
+	"github.com/gotha/niuniu-cms/document"
 	"github.com/gotha/niuniu-cms/graph"
 	"github.com/gotha/niuniu-cms/graph/generated"
+	"github.com/gotha/niuniu-cms/tag"
 	"github.com/rs/cors"
 )
 
@@ -35,13 +36,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	documentService := data.NewDocumentService(db)
-	tagService := data.NewTagService(db)
-	attachmentService := data.NewAttachmentService(db)
+	tagRepo := tag.NewRepository(db)
+	tagService := tag.NewService(tagRepo)
+
+	documentRepo := document.NewRepository(db)
+	documentService := document.NewService(documentRepo, tagService)
+
 	resolver := graph.NewResolver(
 		tagService,
 		documentService,
-		attachmentService,
 	)
 	gqlconfig := generated.Config{
 		Resolvers: resolver,

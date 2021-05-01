@@ -1,63 +1,50 @@
-package data
+package document
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/google/uuid"
+	"github.com/gotha/niuniu-cms/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-type Document struct {
-	gorm.Model
-	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
-	Title       string
-	Body        string
-	CreatedAt   time.Time    `gorm:"autoCreateTime"`
-	UpdatedAt   time.Time    `gorm:"autoUpdateTime"`
-	Tags        []Tag        `gorm:"many2many:document_tags;"`
-	Attachments []Attachment `gorm:"many2many:document_attachments;"`
-}
-
-const defaultLimit = 50
-const defaultSortBy = "created_at"
-
-type DocumentService struct {
+type Repository struct {
 	db *gorm.DB
 }
 
-func NewDocumentService(db *gorm.DB) *DocumentService {
-	return &DocumentService{
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{
 		db: db,
 	}
 }
 
-func (s *DocumentService) Get(id string) (Document, error) {
-	var doc Document
-	res := s.db.
+func (r *Repository) Get(id string) (*db.Document, error) {
+	var doc db.Document
+	res := r.db.
 		Preload("Tags").
-		Preload("Attachments").
 		Where("documents.id = ?", id).
 		First(&doc)
 	if res.Error != nil {
-		return Document{}, res.Error
+		if res.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, res.Error
 	}
 
-	return doc, nil
+	return &doc, nil
 }
 
-func (s *DocumentService) GetNumDocuments() (int64, error) {
+func (r *Repository) GetNumDocuments() (int64, error) {
 	var num int64
-	res := s.db.Model(&Document{}).Count(&num)
+	res := r.db.Model(&db.Document{}).Count(&num)
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	return num, nil
 }
 
-func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
-	query := s.db.Preload("Tags").Preload("Attachments")
+func (r *Repository) GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error) {
+	query := r.db.Preload("Tags")
 
 	limitDocuments := defaultLimit
 	if limit != nil {
@@ -83,7 +70,7 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 		Desc:   sortDescB,
 	})
 
-	var docs []Document
+	var docs []db.Document
 	res := query.Find(&docs)
 	if res.Error != nil {
 		return nil, res.Error
@@ -92,9 +79,9 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 	return docs, nil
 }
 
-func (s *DocumentService) GetNumDocumentsWithTag(tagIDs []string) (int64, error) {
+func (r *Repository) GetNumDocumentsWithTag(tagIDs []string) (int64, error) {
 	var num int64
-	res := s.db.Model(&Document{}).
+	res := r.db.Model(&db.Document{}).
 		Joins("JOIN document_tags AS dt ON dt.document_id = documents.id").
 		Where("dt.tag_id IN ?", tagIDs).
 		Count(&num)
@@ -104,8 +91,8 @@ func (s *DocumentService) GetNumDocumentsWithTag(tagIDs []string) (int64, error)
 	return num, nil
 }
 
-func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
-	query := s.db.Preload("Tags").Preload("Attachments")
+func (r *Repository) GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error) {
+	query := r.db.Preload("Tags")
 
 	limitDocuments := defaultLimit
 	if limit != nil {
@@ -131,7 +118,7 @@ func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, 
 		Desc:   sortDescB,
 	})
 
-	var docs []Document
+	var docs []db.Document
 	res := query.Joins("JOIN document_tags AS dt ON dt.document_id = documents.id").
 		Where("dt.tag_id IN ?", tagIDs).
 		Find(&docs)
@@ -142,32 +129,21 @@ func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, 
 	return docs, nil
 }
 
-func (s *DocumentService) New(title string, body string, tags []Tag, attachments []Attachment) (*Document, error) {
-	doc := &Document{
+func (r *Repository) Create(title string, body string, tags []db.Tag) (*db.Document, error) {
+	doc := &db.Document{
 		Title: title,
 		Body:  body,
 	}
 	doc.Tags = append(doc.Tags, tags...)
-	doc.Attachments = append(doc.Attachments, attachments...)
 
-	res := s.db.Save(doc)
+	res := r.db.Save(doc)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return doc, nil
 }
 
-func (s *DocumentService) Update(id string, title *string, body *string, tags []Tag, attachments []Attachment) (*Document, error) {
-	var doc Document
-	res := s.db.
-		Preload("Tags").
-		Preload("Attachments").
-		Where("documents.id = ?", id).
-		First(&doc)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
+func (r *Repository) Update(doc db.Document, title *string, body *string, tags []db.Tag) (*db.Document, error) {
 	if title == nil && body == nil && tags == nil {
 		return nil, fmt.Errorf("nothing data to be updated")
 	}
@@ -183,11 +159,7 @@ func (s *DocumentService) Update(id string, title *string, body *string, tags []
 		doc.Tags = tags
 	}
 
-	if attachments != nil {
-		doc.Attachments = attachments
-	}
-
-	res = s.db.Save(&doc)
+	res := r.db.Save(&doc)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -195,8 +167,8 @@ func (s *DocumentService) Update(id string, title *string, body *string, tags []
 	return &doc, nil
 }
 
-func (s *DocumentService) Delete(id string) error {
-	res := s.db.Where("id = ?", id).Delete(&Document{})
+func (r *Repository) Delete(id string) error {
+	res := r.db.Where("id = ?", id).Delete(&db.Document{})
 	if res.Error != nil {
 		return res.Error
 	}
