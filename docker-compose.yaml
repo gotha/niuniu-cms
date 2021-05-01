@@ -2,6 +2,23 @@ version: '3.3'
 
 services:
 
+  cms:
+    image: local/niuniu-cms:0.0.1
+    environment:
+      PORT: 80
+      DB_HOST: db
+      DB_USERNAME: gocms
+      DB_PASSWORD: 4rfvbgt5
+      DB_NAME: gocms
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      MIGRATE_DB: "true"
+      LAMBDA: "false"
+    depends_on:
+      - db
+    ports:
+      - 9999:80
+
   db:
     image: "postgres"
     environment:
