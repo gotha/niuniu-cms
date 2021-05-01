@@ -53,7 +53,7 @@ package:
   exclude:
     - ./**
   include:
-    - ./bin/**
+    - ./bin/lambda
 
 functions:
   hello:
