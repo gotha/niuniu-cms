@@ -53,7 +53,6 @@ func (s *TagService) GetMultiple(ids []string) ([]Tag, error) {
 }
 
 func (s *TagService) New(title string) (*Tag, error) {
-
 	var existingTag Tag
 	res := s.db.Where("title = ?", title).First(&existingTag)
 	if res.RowsAffected > 0 {
@@ -72,7 +71,6 @@ func (s *TagService) New(title string) (*Tag, error) {
 }
 
 func (s *TagService) Update(id string, title string) (*Tag, error) {
-
 	tag, err := s.Get(id)
 	if err != nil {
 		return nil, fmt.Errorf("err fetching tag %s: %w", id, err)

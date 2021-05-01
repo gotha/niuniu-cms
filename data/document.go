@@ -34,7 +34,6 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 }
 
 func (s *DocumentService) Get(id string) (Document, error) {
-
 	var doc Document
 	res := s.db.
 		Preload("Tags").
@@ -58,7 +57,6 @@ func (s *DocumentService) GetNumDocuments() (int64, error) {
 }
 
 func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
-
 	query := s.db.Preload("Tags").Preload("Attachments")
 
 	limitDocuments := defaultLimit
@@ -76,7 +74,7 @@ func (s *DocumentService) GetAll(limit *int, offset *int, sortBy *string, sortDe
 		sortColumn = *sortBy
 	}
 	sortDescB := true
-	if sortDesc != nil && *sortDesc == false {
+	if sortDesc != nil && !*sortDesc {
 		sortDescB = false
 	}
 
@@ -107,7 +105,6 @@ func (s *DocumentService) GetNumDocumentsWithTag(tagIDs []string) (int64, error)
 }
 
 func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]Document, error) {
-
 	query := s.db.Preload("Tags").Preload("Attachments")
 
 	limitDocuments := defaultLimit
@@ -125,7 +122,7 @@ func (s *DocumentService) GetAllByTag(tagIDs []string, limit *int, offset *int, 
 		sortColumn = *sortBy
 	}
 	sortDescB := true
-	if sortDesc != nil && *sortDesc == false {
+	if sortDesc != nil && !*sortDesc {
 		sortDescB = false
 	}
 

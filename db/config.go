@@ -30,7 +30,6 @@ func (c *Config) GetDSN() string {
 }
 
 func NewConfigFromEnv() (*Config, error) {
-
 	host := os.Getenv("DB_HOST")
 	username := os.Getenv("DB_USERNAME")
 	password := os.Getenv("DB_PASSWORD")

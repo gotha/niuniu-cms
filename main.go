@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-
 	config, err := NewConfigFromEnv()
 	if err != nil {
 		fmt.Printf("error loading config: %s", err.Error())

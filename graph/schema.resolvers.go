@@ -137,8 +137,8 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	}
 
 	var retval []*model.Tag
-	for _, tag := range tags {
-		retval = append(retval, TagToModel(&tag))
+	for i := range tags {
+		retval = append(retval, TagToModel(&tags[i]))
 	}
 
 	return retval, nil

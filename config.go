@@ -12,7 +12,6 @@ type Config struct {
 }
 
 func NewConfigFromEnv() (*Config, error) {
-
 	var iPort int
 	port := os.Getenv("PORT")
 	if port == "" {

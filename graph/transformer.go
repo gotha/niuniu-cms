@@ -15,10 +15,9 @@ func TagToModel(tag *data.Tag) *model.Tag {
 }
 
 func DocumentToModel(doc data.Document) *model.Document {
-
 	var tags []*model.Tag
-	for _, tag := range doc.Tags {
-		tags = append(tags, TagToModel(&tag))
+	for i := range doc.Tags {
+		tags = append(tags, TagToModel(&doc.Tags[i]))
 	}
 
 	var attachments []*model.Attachment

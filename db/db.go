@@ -10,7 +10,6 @@ import (
 )
 
 func InitDB(c *Config) (*gorm.DB, error) {
-
 	dsn := c.GetDSN()
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -19,7 +18,6 @@ func InitDB(c *Config) (*gorm.DB, error) {
 
 	migrateDB := os.Getenv("MIGRATE_DB")
 	if migrateDB == "true" {
-
 		q := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 		res := db.Exec(q)
 		if res.Error != nil {
