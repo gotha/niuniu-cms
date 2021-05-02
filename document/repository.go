@@ -1,12 +1,23 @@
 package document
 
-import (
-	"fmt"
+//go:generate moq -out ./repository_mock.go . repository
 
+import (
 	"github.com/gotha/niuniu-cms/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+type repository interface {
+	Get(id string) (*db.Document, error)
+	GetNumDocuments() (int64, error)
+	GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error)
+	GetNumDocumentsWithTag(tagIDs []string) (int64, error)
+	GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error)
+	Create(title string, body string, tags []db.Tag) (*db.Document, error)
+	Update(doc *db.Document) (*db.Document, error)
+	Delete(id string) error
+}
 
 type Repository struct {
 	db *gorm.DB
@@ -143,28 +154,13 @@ func (r *Repository) Create(title string, body string, tags []db.Tag) (*db.Docum
 	return doc, nil
 }
 
-func (r *Repository) Update(doc db.Document, title *string, body *string, tags []db.Tag) (*db.Document, error) {
-	if title == nil && body == nil && tags == nil {
-		return nil, fmt.Errorf("nothing data to be updated")
-	}
-
-	if title != nil {
-		doc.Title = *title
-	}
-	if body != nil {
-		doc.Body = *body
-	}
-
-	if tags != nil {
-		doc.Tags = tags
-	}
-
+func (r *Repository) Update(doc *db.Document) (*db.Document, error) {
 	res := r.db.Save(&doc)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	return &doc, nil
+	return doc, nil
 }
 
 func (r *Repository) Delete(id string) error {

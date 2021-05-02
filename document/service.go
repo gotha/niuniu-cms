@@ -9,21 +9,6 @@ import (
 const defaultLimit = 50
 const defaultSortBy = "created_at"
 
-type repository interface {
-	Get(id string) (*db.Document, error)
-	GetNumDocuments() (int64, error)
-	GetAll(limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error)
-	GetNumDocumentsWithTag(tagIDs []string) (int64, error)
-	GetAllByTag(tagIDs []string, limit *int, offset *int, sortBy *string, sortDesc *bool) ([]db.Document, error)
-	Create(title string, body string, tags []db.Tag) (*db.Document, error)
-	Update(doc db.Document, title *string, body *string, tags []db.Tag) (*db.Document, error)
-	Delete(id string) error
-}
-
-type tagService interface {
-	GetMultiple(ids []string) ([]db.Tag, error)
-}
-
 type Service struct {
 	repo       repository
 	tagService tagService
@@ -86,6 +71,9 @@ func (s *Service) Create(title string, body string, tagIDs []string) (*db.Docume
 			if err != nil {
 				return nil, fmt.Errorf("tagService failed to load specified tags: %w", err)
 			}
+			if len(tags) < len(tagIDs) {
+				return nil, fmt.Errorf("some tags do not exit")
+			}
 		}
 	}
 
@@ -102,6 +90,13 @@ func (s *Service) Update(id string, title *string, body *string, tagIDs []string
 		return nil, err
 	}
 
+	if title != nil {
+		doc.Title = *title
+	}
+	if body != nil {
+		doc.Body = *body
+	}
+
 	var tags []db.Tag
 	if tagIDs != nil {
 		if len(tagIDs) > 0 {
@@ -109,13 +104,16 @@ func (s *Service) Update(id string, title *string, body *string, tagIDs []string
 			if err != nil {
 				return nil, fmt.Errorf("tagService failed to load specified tags: %w", err)
 			}
+			if len(tags) < len(tagIDs) {
+				return nil, fmt.Errorf("some tags do not exit")
+			}
+			doc.Tags = tags
 		}
 	}
 
-	// @todo - this looks bad
-	res, err := s.repo.Update(*doc, title, body, tags)
+	res, err := s.repo.Update(doc)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error updating document: %w", err)
 	}
 
 	return res, nil
