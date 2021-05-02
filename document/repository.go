@@ -93,6 +93,7 @@ func (r *Repository) GetAll(limit *int, offset *int, sortBy *string, sortDesc *b
 func (r *Repository) GetNumDocumentsWithTag(tagIDs []string) (int64, error) {
 	var num int64
 	res := r.db.Model(&db.Document{}).
+		Select("COUNT(DISTINCT dt.document_id)").
 		Joins("JOIN document_tags AS dt ON dt.document_id = documents.id").
 		Where("dt.tag_id IN ?", tagIDs).
 		Count(&num)

@@ -10,3 +10,7 @@ type Tag struct {
 	ID    uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
 	Title string
 }
+
+func (a *Tag) Equal(b *Tag) bool {
+	return a.ID == b.ID && a.Title == b.Title
+}

@@ -43,3 +43,28 @@ then execute:
 ```sh
 go generate ./...
 ```
+
+
+### Integration tests
+
+To run the integration tests you need postgres database. Start it with
+
+```sh
+docker-compose up -d db
+```
+
+and run the tests like this:
+
+```sh
+TZ=UTC \
+	DB_TIMEZONE="UTC" \
+	DB_HOST=localhost \
+	DB_USERNAME=cms \
+	DB_PASSWORD=4rfvbgt5 \
+	DB_NAME=cms \
+	DB_PORT=5432 \
+	DB_SSL_MODE=disable \
+	MIGRATE_DB=true \
+	LAMBDA=false  \
+	go test -v -tags=integration ./...
+```

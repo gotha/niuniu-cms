@@ -51,7 +51,7 @@ func NewConfigFromEnv() (*Config, error) {
 	}
 	timezone := os.Getenv("DB_TIMEZONE")
 	if timezone == "" {
-		timezone = "Europe/Sofia"
+		timezone = "UTC"
 	}
 
 	return &Config{

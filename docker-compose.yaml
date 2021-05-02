@@ -7,9 +7,9 @@ services:
     environment:
       PORT: 80
       DB_HOST: db
-      DB_USERNAME: gocms
+      DB_USERNAME: cms
       DB_PASSWORD: 4rfvbgt5
-      DB_NAME: gocms
+      DB_NAME: cms
       DB_PORT: 5432
       DB_SSL_MODE: disable
       MIGRATE_DB: "true"
@@ -22,9 +22,9 @@ services:
   db:
     image: "postgres"
     environment:
-      POSTGRES_USER: gocms
+      POSTGRES_USER: cms
       POSTGRES_PASSWORD: 4rfvbgt5
-      POSTGRES_DB: gocms
+      POSTGRES_DB: cms
     ports:
       - 5432:5432
 
