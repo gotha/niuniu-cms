@@ -489,3 +489,169 @@ func TestRepoGetAllByTag(t *testing.T) {
 		})
 	}
 }
+
+func TestRepoCreate(t *testing.T) {
+
+	conn := getDBConn()
+
+	tagUUIDs := []interface{}{
+		"1533c1a6-8c9b-430a-9937-de7ac6e9af57",
+		"d2c9e5b4-bbdd-4137-a83c-f487de109207",
+	}
+
+	queries := []string{
+		fmt.Sprintf(`
+		INSERT INTO tags (id, title)
+		VALUES
+			( '%s', 'tag1'),
+			( '%s', 'tag2')
+		`, tagUUIDs...),
+	}
+	for _, q := range queries {
+		conn.Exec(q)
+	}
+
+	repo := NewRepository(conn)
+
+	t.Run("test that no tags are added when none are passed", func(t *testing.T) {
+		defer cleanTables()
+
+		doc, err := repo.Create("myTitle1", "body1", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		row := conn.Raw("SELECT id, created_at, updated_at FROM documents LIMIT 1").Row()
+		var docUUID, createdAt, updatedAt string
+		row.Scan(&docUUID, &createdAt, &updatedAt)
+		createdAtDateTime, _ := time.Parse(time.RFC3339, createdAt)
+		updatedAtDatetime, _ := time.Parse(time.RFC3339, updatedAt)
+
+		expectedDoc := &db.Document{
+			ID:        uuid.MustParse(docUUID),
+			Title:     "myTitle1",
+			Body:      "body1",
+			CreatedAt: createdAtDateTime,
+			UpdatedAt: updatedAtDatetime,
+		}
+
+		if !doc.Equal(expectedDoc) {
+			t.Fatalf("expected document to look like '%v', but got '%v'", expectedDoc, doc)
+		}
+	})
+
+	t.Run("test that tags are added when passed", func(t *testing.T) {
+		defer cleanTables()
+
+		tags := []db.Tag{
+			{
+				ID:    uuid.MustParse(tagUUIDs[0].(string)),
+				Title: "tag1",
+			},
+			{
+				ID:    uuid.MustParse(tagUUIDs[1].(string)),
+				Title: "tag2",
+			},
+		}
+
+		doc, err := repo.Create("myTitle", "body", tags)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		row := conn.Raw("SELECT id, created_at, updated_at FROM documents LIMIT 1").Row()
+		var docUUID, createdAt, updatedAt string
+		row.Scan(&docUUID, &createdAt, &updatedAt)
+		createdAtDateTime, _ := time.Parse(time.RFC3339, createdAt)
+		updatedAtDatetime, _ := time.Parse(time.RFC3339, updatedAt)
+
+		expectedDoc := &db.Document{
+			ID:        uuid.MustParse(docUUID),
+			Title:     "myTitle",
+			Body:      "body",
+			Tags:      tags,
+			CreatedAt: createdAtDateTime,
+			UpdatedAt: updatedAtDatetime,
+		}
+
+		if !doc.Equal(expectedDoc) {
+			t.Fatalf("expected document to look like '%v', but got '%v'", expectedDoc, doc)
+		}
+	})
+}
+
+func TestRepoUpdateDocument(t *testing.T) {
+	conn := getDBConn()
+	repo := NewRepository(conn)
+
+	t.Run("test that properties are updated", func(t *testing.T) {
+		defer cleanTables()
+
+		doc, err := repo.Create("myTestTitle", "body1", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		doc.Title = "myTestTitleUpdated"
+		doc.Body = "body2"
+		_, err = repo.Update(doc)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		row := conn.Raw("SELECT title, body FROM documents LIMIT 1").Row()
+		var title, body string
+		row.Scan(&title, &body)
+
+		if title != "myTestTitleUpdated" {
+			t.Fatalf("failed to update title")
+		}
+		if body != "body2" {
+			t.Fatalf("failed to update body")
+		}
+	})
+}
+
+func TestRepoDelete(t *testing.T) {
+	conn := getDBConn()
+	repo := NewRepository(conn)
+
+	t.Run("test that delete does something", func(t *testing.T) {
+		defer cleanTables()
+
+		doc1, err := repo.Create("myTestTitle", "body1", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		doc2, err := repo.Create("myTestTitle", "body2", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		row := conn.Raw("SELECT COUNT(*) FROM documents").Row()
+		var num int
+		row.Scan(&num)
+		if num != 2 {
+			t.Fatalf("expected to have 2 documents, %d exist", num)
+		}
+
+		err = repo.Delete(doc1.ID.String())
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		row = conn.Raw("SELECT COUNT(*) FROM documents WHERE deleted_at IS NULL").Row()
+		row.Scan(&num)
+		if num != 1 {
+			t.Fatalf("expected to have 1 document deleted, %d exist", num)
+		}
+
+		row = conn.Raw("SELECT id FROM documents WHERE deleted_at IS NULL LIMIT 1").Row()
+		var uuidDoc2 string
+		row.Scan(&uuidDoc2)
+
+		if uuidDoc2 != doc2.ID.String() {
+			t.Fatalf("seems like the wrong document was deleted")
+		}
+	})
+}
