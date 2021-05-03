@@ -1,11 +1,23 @@
 package tag
 
+//go:generate moq -out ./repository_mock.go . repository
+
 import (
 	"fmt"
 
 	"github.com/gotha/niuniu-cms/db"
 	"gorm.io/gorm"
 )
+
+type repository interface {
+	GetAll() ([]db.Tag, error)
+	Get(id string) (*db.Tag, error)
+	GetTagByTitle(title string) (*db.Tag, error)
+	GetMultiple(ids []string) ([]db.Tag, error)
+	Create(title string) (*db.Tag, error)
+	Update(tag db.Tag, title string) (*db.Tag, error)
+	Delete(id string) error
+}
 
 type Repository struct {
 	db *gorm.DB

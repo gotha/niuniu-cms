@@ -6,16 +6,6 @@ import (
 	"github.com/gotha/niuniu-cms/db"
 )
 
-type repository interface {
-	GetAll() ([]db.Tag, error)
-	Get(id string) (*db.Tag, error)
-	GetTagByTitle(title string) (*db.Tag, error)
-	GetMultiple(ids []string) ([]db.Tag, error)
-	Create(title string) (*db.Tag, error)
-	Update(tag db.Tag, title string) (*db.Tag, error)
-	Delete(id string) error
-}
-
 type Service struct {
 	repo repository
 }
@@ -66,12 +56,7 @@ func (s *Service) Update(id string, title string) (*db.Tag, error) {
 		return nil, fmt.Errorf("trying to update non existing tag: %s", id)
 	}
 
-	res, err := s.repo.Update(*tag, title)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return s.repo.Update(*tag, title)
 }
 
 func (s *Service) Delete(id string) error {
