@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+
+  cms:
+    image: local/niuniu-cms:0.0.1
+    environment:
+      PORT: 80
+      DB_HOST: db
+      DB_USERNAME: cms
+      DB_PASSWORD: 4rfvbgt5
+      DB_NAME: cms
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      MIGRATE_DB: "true"
+      LAMBDA: "false"
+    depends_on:
+      - db
+    ports:
+      - 9999:80
+
+  db:
+    image: "postgres"
+    environment:
+      POSTGRES_USER: cms
+      POSTGRES_PASSWORD: 4rfvbgt5
+      POSTGRES_DB: cms
+    ports:
+      - 5432:5432
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test
+      PGADMIN_DEFAULT_PASSWORD: 4rfvbgt5
+    ports:
+      - 5050:80

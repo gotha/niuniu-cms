@@ -1,0 +1,58 @@
+
+type Query {
+  tags: [Tag!]!
+  getDocument(id: String!): Document!
+  getDocuments(first: Int, offset: Int, perPage: Int, sortBy: String, sortDesc: Boolean): Documents
+  getDocumentsByTag(tagIDs: [String!]!, first: Int, offset: Int, sortBy: String, sortDesc: Boolean): Documents
+}
+
+type Mutation {
+  createTag(input: NewTag!): Tag!
+  updateTag(id: String!, input: UpdateTag!): Tag!
+  deleteTag(id: String!): Boolean!
+
+  createDocument(input: NewDocument!): Document!
+  updateDocument(id: String!, input: UpdateDocument!): Document!
+  deleteDocument(id: String!): Boolean!
+}
+
+type Document {
+  id: String!
+  title: String!
+  body: String!
+  createdAt: String!
+  updatedAt: String!
+  tags: [Tag!]!
+}
+
+type Documents {
+  documents: [Document!]!
+  count: Int!
+}
+
+input NewDocument {
+  title: String!
+  body: String!
+  tags: [String!]
+}
+
+input UpdateDocument {
+  title: String
+  body:  String
+  tags: [String!]
+}
+
+type Tag {
+  id: String!
+  title: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input NewTag {
+  title: String!
+}
+
+input UpdateTag {
+  title: String!
+}
